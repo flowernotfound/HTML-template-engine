@@ -1,17 +1,15 @@
 #ifndef SOCKET_UTILS_H
 #define SOCKET_UTILS_H
 
+#include <netinet/in.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <arpa/inet.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 
 #define PORT 8080
-#define BUFFER_SIZE 1024
 
 int initialize_server(struct sockaddr_in* address);
-void read_client_data(int socket, char* buffer);
 
 #endif

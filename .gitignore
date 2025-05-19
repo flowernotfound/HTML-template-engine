@@ -1,1 +1,5 @@
 text.txt
+output.xml
+server
+*.o
+.vscode/
