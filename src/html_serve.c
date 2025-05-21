@@ -36,5 +36,8 @@ char* serve_html(const char* filename, size_t* out_size) {
     if (out_size)
         *out_size = read_size;
 
+    printf("[DEBUG] HTML read_size: %zu\n", read_size);
+    printf("[DEBUG] HTML content (first 80): %.80s\n", buffer);
+
     return buffer;
 }
