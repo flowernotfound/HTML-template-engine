@@ -3,75 +3,75 @@
 #include <string.h>
 
 int main() {
-    int server_fd, new_socket;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
+  int server_fd, new_socket;
+  struct sockaddr_in address;
+  int addrlen = sizeof(address);
 
-    server_fd = initialize_server(&address);
-    if (server_fd == -1) {
-        return EXIT_FAILURE;
+  server_fd = initialize_server(&address);
+  if (server_fd == -1) {
+    return EXIT_FAILURE;
+  }
+
+  printf("Server listening on port 8080...\n");
+
+  while (1) {
+    new_socket =
+        accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
+    if (new_socket < 0) {
+      perror("accept failed");
+      continue;
     }
 
-    printf("Server listening on port 8080...\n");
+    printf("[LOG] Client connected.\n");
 
-    while (1) {
-        new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
-        if (new_socket < 0) {
-            perror("accept failed");
-            continue;
-        }
+    size_t body_len = 0;
+    char *html = serve_html("index.html", &body_len);
 
-        printf("[LOG] Client connected.\n");
+    if (html) {
+      printf("[LOG] HTML loaded successfully. Size: %zu bytes\n", body_len);
+      printf("[LOG] First 80 chars: %.80s\n", html);
 
-        size_t body_len = 0;
-        char* html = serve_html("index.html", &body_len);
+      char header[256];
+      snprintf(header, sizeof(header),
+               "HTTP/1.1 200 OK\r\n"
+               "Content-Type: text/html\r\n"
+               "Content-Length: %zu\r\n"
+               "Connection: close\r\n\r\n",
+               body_len);
 
-        if (html) {
-            printf("[LOG] HTML loaded successfully. Size: %zu bytes\n", body_len);
-            printf("[LOG] First 80 chars: %.80s\n", html);
+      ssize_t sent;
 
-            char header[256];
-            snprintf(header, sizeof(header),
-                     "HTTP/1.1 200 OK\r\n"
-                     "Content-Type: text/html\r\n"
-                     "Content-Length: %zu\r\n"
-                     "Connection: close\r\n\r\n",
-                     body_len);
+      printf("[DEBUG] Sending header...\n");
+      sent = write(new_socket, header, strlen(header));
+      if (sent == -1) {
+        perror("[ERROR] write(header) failed");
+      } else {
+        printf("[LOG] Header sent: %zd bytes\n", sent);
+      }
 
-            ssize_t sent;
+      printf("[DEBUG] Sending body...\n");
+      sent = write(new_socket, html, body_len);
+      if (sent == -1) {
+        perror("[ERROR] write(body) failed");
+      } else {
+        printf("[LOG] Body sent: %zd bytes\n", sent);
+      }
 
-            printf("[DEBUG] Sending header...\n");
-            sent = write(new_socket, header, strlen(header));
-            if (sent == -1) {
-                perror("[ERROR] write(header) failed");
-            } else {
-                printf("[LOG] Header sent: %zd bytes\n", sent);
-            }
-
-            printf("[DEBUG] Sending body...\n");
-            sent = write(new_socket, html, body_len);
-            if (sent == -1) {
-                perror("[ERROR] write(body) failed");
-            } else {
-                printf("[LOG] Body sent: %zd bytes\n", sent);
-            }
-
-            free(html);
-        } else {
-            perror("[ERROR] Failed to load HTML");
-            const char* error =
-                "HTTP/1.1 404 Not Found\r\n"
-                "Content-Type: text/plain\r\n"
-                "Connection: close\r\n\r\n"
-                "File not found.\n";
-            write(new_socket, error, strlen(error));
-        }
-
-        printf("[LOG] Closing connection to client.\n");
-        shutdown(new_socket, SHUT_WR); // important!!!!
-        close(new_socket);
+      free(html);
+    } else {
+      perror("[ERROR] Failed to load HTML");
+      const char *error = "HTTP/1.1 404 Not Found\r\n"
+                          "Content-Type: text/plain\r\n"
+                          "Connection: close\r\n\r\n"
+                          "File not found.\n";
+      write(new_socket, error, strlen(error));
     }
 
-    close(server_fd);
-    return 0;
+    printf("[LOG] Closing connection to client.\n");
+    shutdown(new_socket, SHUT_WR); // important!!!!
+    close(new_socket);
+  }
+
+  close(server_fd);
+  return 0;
 }
