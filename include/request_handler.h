@@ -8,4 +8,6 @@
 
 #define BUFFER_SIZE 4096
 
+void handle_client(int client_socket);
+
 #endif
