@@ -27,10 +27,4 @@ clean:
 
 rebuild: clean all
 
-install: $(TARGET)
-	cp $(TARGET) /usr/local/bin/
-
-uninstall:
-	rm -f /usr/local/bin/$(TARGET)
-
 .PHONY: all clean rebuild install uninstall
