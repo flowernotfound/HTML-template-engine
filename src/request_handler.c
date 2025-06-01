@@ -25,26 +25,28 @@ void handle_client(int client_socket) {
   }
 
   const char *filepath =
-      (strcmp(path, "/") == 0) ? "template_test.html" : path + 1;
+      (strcmp(path, "/") == 0) ? "template_conditional.html" : path + 1;
 
   size_t body_len = 0;
   char *html = serve_html(filepath, &body_len);
 
   if (html) {
     printf("[DEBUG] Original HTML loaded, processing template...\n");
-    // hardcoded key-value pairs for testing
-    const char *keys[] = {"user", "site_name", "role"};
-    const char *values[] = {"user_test", "site_name_test", "role_test"};
+
+    const char *keys[] = {"site_name", "is_logged_in", "user", "role"};
+    const char *values[] = {"C Template Engine", "", "Dexter",
+                            "Senior Developer"};
+    // const char *values[] = {"C Template Engine", "1", "Dexter",
+    //                         "Senior Developer"};
     const char *loop_key = "item";
     const char *loop_values[] = {"Item 1", "Item 2", "Item 3"};
 
-    char *processed_html = process_template(
-        html, keys, values, 3,
-        loop_key, loop_values, 3
-    );
+    char *processed_html =
+        process_template(html, keys, values, 4, loop_key, loop_values, 3);
 
     if (processed_html) {
       printf("[DEBUG] Template processing completed successfully\n");
+
       size_t processed_len = strlen(processed_html);
 
       char header[256];

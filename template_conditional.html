@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Conditional Template Test</title>
+    </head>
+    <body>
+        <h1>Welcome to {{site_name}}</h1>
+
+        {% if is_logged_in %}
+        <h2>Hello {{user}}!</h2>
+        <p>You are successfully logged in.</p>
+        <p>Your role is: {{role}}</p>
+        {% else %}
+        <h2>Please log in</h2>
+        <p>You need to login to access this content.</p>
+        {% endif %}
+
+        <footer>
+            <p>Thank you for visiting our site!</p>
+        </footer>
+    </body>
+</html>
