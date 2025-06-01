@@ -4,3 +4,4 @@ server
 *.o
 .vscode/
 obj/
+docs.md

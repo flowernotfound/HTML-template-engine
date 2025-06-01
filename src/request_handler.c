@@ -1,5 +1,6 @@
 #include "request_handler.h"
 #include "html_serve.h"
+#include "template.h"
 
 void handle_client(int client_socket) {
   char buffer[BUFFER_SIZE] = {0};
@@ -23,21 +24,50 @@ void handle_client(int client_socket) {
     return;
   }
 
-  const char *filepath = (strcmp(path, "/") == 0) ? "index.html" : path + 1;
+  const char *filepath =
+      (strcmp(path, "/") == 0) ? "template_test.html" : path + 1;
 
   size_t body_len = 0;
   char *html = serve_html(filepath, &body_len);
 
   if (html) {
-    char header[256];
-    snprintf(header, sizeof(header),
-             "HTTP/1.1 200 OK\r\n"
-             "Content-Type: text/html\r\n"
-             "Content-Length: %zu\r\n"
-             "Connection: close\r\n\r\n",
-             body_len);
-    write(client_socket, header, strlen(header));
-    write(client_socket, html, body_len);
+    printf("[DEBUG] Original HTML loaded, processing template...\n");
+    // hardcoded key-value pairs for testing
+    const char *keys[] = {"user", "site_name", "role"};
+    const char *values[] = {"user_test", "site_name_test", "role_test"};
+    const char *loop_key = "item";
+    const char *loop_values[] = {"Item 1", "Item 2", "Item 3"};
+
+    char *processed_html = process_template(
+        html, keys, values, 3,
+        loop_key, loop_values, 3
+    );
+
+    if (processed_html) {
+      printf("[DEBUG] Template processing completed successfully\n");
+      size_t processed_len = strlen(processed_html);
+
+      char header[256];
+      snprintf(header, sizeof(header),
+               "HTTP/1.1 200 OK\r\n"
+               "Content-Type: text/html\r\n"
+               "Content-Length: %zu\r\n"
+               "Connection: close\r\n\r\n",
+               processed_len);
+
+      write(client_socket, header, strlen(header));
+      write(client_socket, processed_html, processed_len);
+
+      free(processed_html);
+    } else {
+      printf("[ERROR] Template processing failed\n");
+      const char *error = "HTTP/1.1 500 Internal Server Error\r\n"
+                          "Content-Type: text/plain\r\n"
+                          "Connection: close\r\n\r\n"
+                          "Template processing failed.\n";
+      write(client_socket, error, strlen(error));
+    }
+
     free(html);
   } else {
     const char *error = "HTTP/1.1 404 Not Found\r\n"
